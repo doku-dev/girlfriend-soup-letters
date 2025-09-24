@@ -150,15 +150,12 @@
             100% { transform: scale(1); }
         }
         
-        /* Colores para diferentes direcciones */
+        /* Colores para las 5 direcciones permitidas */
         .horizontal { background-color: #ff6b6b !important; color: white !important; }
-        .horizontal-rtl { background-color: #feca57 !important; color: black !important; }
         .vertical { background-color: #4ecdc4 !important; color: white !important; }
         .vertical-up { background-color: #ff9ff3 !important; color: white !important; }
         .diagonal-down { background-color: #45b7d1 !important; color: white !important; }
-        .diagonal-up { background-color: #96ceb4 !important; color: white !important; }
         .diagonal-down-left { background-color: #54a0ff !important; color: white !important; }
-        .diagonal-up-left { background-color: #5f27cd !important; color: white !important; }
         
         .word-list {
             flex: 0 0 320px;
@@ -299,9 +296,9 @@
         <h1>💝 Sopa de Letras 💝</h1>
         
         <div class="controls">
-            <button class="btn" onclick="findAllWords()">🔍 Buscar Todas las Palabras</button>
-            <button class="btn" onclick="clearHighlights()">🧹 Limpiar</button>
-            <button class="btn" onclick="resetGame()">🎲 Nueva Partida</button>
+           <!--  <button class="btn" onclick="findAllWords()">🔍 Buscar Todas las Palabras</button> -->
+           <!--  <button class="btn" onclick="clearHighlights()">🧹 Limpiar</button> -->
+            <!-- <button class="btn" onclick="resetGame()">🎲 Nueva Partida</button> -->
             <button class="btn" id="toggle-found-btn" onclick="toggleFoundWords()">👁️ Ocultar Encontradas</button>
         </div>
         
@@ -309,10 +306,6 @@
             <div class="legend-item">
                 <div class="legend-color horizontal"></div>
                 <span>Horizontal →</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color horizontal-rtl"></div>
-                <span>Horizontal ←</span>
             </div>
             <div class="legend-item">
                 <div class="legend-color vertical"></div>
@@ -327,16 +320,8 @@
                 <span>Diagonal ↘</span>
             </div>
             <div class="legend-item">
-                <div class="legend-color diagonal-up"></div>
-                <span>Diagonal ↗</span>
-            </div>
-            <div class="legend-item">
                 <div class="legend-color diagonal-down-left"></div>
                 <span>Diagonal ↙</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color diagonal-up-left"></div>
-                <span>Diagonal ↖</span>
             </div>
         </div>
         
@@ -401,16 +386,13 @@
         let showFoundWords = true;
         let gameId = null;
         
-        // Direcciones posibles: [deltaRow, deltaCol, className]
+        // Solo 5 direcciones permitidas
         const directions = [
-            [0, 1, 'horizontal'],
-            [0, -1, 'horizontal-rtl'],
-            [1, 0, 'vertical'],
-            [-1, 0, 'vertical-up'],
-            [1, 1, 'diagonal-down'],
-            [-1, -1, 'diagonal-up'],
-            [1, -1, 'diagonal-down-left'],
-            [-1, 1, 'diagonal-up-left']
+            [0, 1, 'horizontal'],     // Horizontal →
+            [1, 0, 'vertical'],       // Vertical ↓
+            [-1, 0, 'vertical-up'],   // Vertical ↑
+            [1, 1, 'diagonal-down'],  // Diagonal ↘
+            [1, -1, 'diagonal-down-left'] // Diagonal ↙
         ];
         
         function generateRandomLetter() {
@@ -523,6 +505,15 @@
             
             const dx = endRow === startRow ? 0 : (endRow > startRow ? 1 : -1);
             const dy = endCol === startCol ? 0 : (endCol > startCol ? 1 : -1);
+            
+            // Solo permitir las 5 direcciones válidas
+            const isValidDirection = directions.some(([dirDx, dirDy]) => 
+                dirDx === dx && dirDy === dy
+            );
+            
+            if (!isValidDirection) {
+                return path;
+            }
             
             if (dx !== 0 && dy !== 0 && Math.abs(endRow - startRow) !== Math.abs(endCol - startCol)) {
                 return path;
