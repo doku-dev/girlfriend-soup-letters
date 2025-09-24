@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sopa de Letras - Día de San Valentín</title>
+    <title>Sopa de Letras - Aniversario de Aless y Gera</title>
     <style>
         * {
             margin: 0;
@@ -291,12 +291,18 @@
 </head>
 <body>
     <div class="container">
-        <h1>💝 Sopa de Letras - Día de San Valentín 💝</h1>
+        <!-- NOMBRES MODIFICABLES AQUÍ -->
+        <div style="text-align: center; margin-bottom: 15px;">
+            <h2 style="color: #d63384; font-size: 1.8em; margin: 0; text-shadow: 1px 1px 3px rgba(0,0,0,0.1);">Aniversario de Aless y Gera</h2>
+        </div>
+        
+        <h1>💝 Sopa de Letras 💝</h1>
         
         <div class="controls">
             <button class="btn" onclick="findAllWords()">🔍 Buscar Todas las Palabras</button>
             <button class="btn" onclick="clearHighlights()">🧹 Limpiar</button>
             <button class="btn" onclick="resetGame()">🎲 Nueva Partida</button>
+            <button class="btn" id="toggle-found-btn" onclick="toggleFoundWords()">👁️ Ocultar Encontradas</button>
         </div>
         
         <div class="legend">
@@ -355,30 +361,18 @@
     </div>
 
     <script>
-        // Configuración del juego - PALABRAS MODIFICABLES AQUÍ
+        // Configuración del juego - PALABRAS Y NOMBRES MODIFICABLES AQUÍ
+        const NOMBRES = {
+            nombre1: 'Aless',
+            nombre2: 'Gera'
+        };
+        
         const GRID_SIZE = 20;
         const WORDS = [
-  "VRCHAT",
-  "GERARDO", 
-  "ALESSANDRA",
-  "NOVIOS",
-  "AMORCITO",
-  "CORAZON",
-  "PRECIOSA",
-  "ILOVEYOUTRESMIL",
-  "OSITO",
-  "DOSMESES",
-  "PENTHOUSE",
-  "OVERWATCH",
-  "GOLDEN",
-  "DISCORD",
-  "CONFIANZA",
-  "RISAS",
-  "COMPRENSION",
-  "ALEGRIA",
-  "HERAPALACE",
-  "PLAYTOGETHER"
-];
+            'AMOR', 'CORAZON', 'FLORES', 'BESO', 'REGALO', 'DULCE', 'ROSA', 'CARTA',
+            'ABRAZO', 'FELIZ', 'SONRISA', 'CARIÑO', 'DULCES', 'ROJO', 'FEBRERO',
+            'PAREJA', 'JUNTOS', 'VIDA', 'ETERNO', 'PASION'
+        ];
         
         // Variables del juego
         let grid = [];
@@ -387,6 +381,8 @@
         let isSelecting = false;
         let selectionStart = null;
         let currentSelection = [];
+        let showFoundWords = true;
+        let gameId = null;
         
         // Direcciones posibles: [deltaRow, deltaCol, className]
         const directions = [
@@ -437,6 +433,9 @@
             grid = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(''));
             wordPositions = new Map();
             
+            // Generar ID único para este juego
+            gameId = 'game_' + Date.now();
+            
             for (const word of WORDS) {
                 let placed = false;
                 let attempts = 0;
@@ -463,6 +462,8 @@
                     }
                 }
             }
+            
+            saveGameState();
         }
         
         function initializeGrid() {
@@ -554,6 +555,7 @@
                 if (foundWord && !foundWords.has(foundWord)) {
                     foundWords.add(foundWord);
                     
+                    // Animar las celdas encontradas
                     currentSelection.forEach(([row, col]) => {
                         const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
                         if (cell) {
@@ -564,6 +566,14 @@
                     
                     updateWordList();
                     updateStats();
+                    saveGameState();
+                    
+                    // Marcar las palabras encontradas después de la animación
+                    setTimeout(() => {
+                        if (showFoundWords) {
+                            highlightFoundWords();
+                        }
+                    }, 650);
                 }
             }
             
@@ -629,6 +639,8 @@
         }
         
         function highlightFoundWords() {
+            if (!showFoundWords) return;
+            
             document.querySelectorAll('.cell').forEach(cell => {
                 const row = parseInt(cell.dataset.row);
                 const col = parseInt(cell.dataset.col);
@@ -651,7 +663,10 @@
             foundWords = new Set(WORDS);
             updateWordList();
             updateStats();
-            highlightFoundWords();
+            saveGameState();
+            if (showFoundWords) {
+                highlightFoundWords();
+            }
         }
         
         function clearHighlights() {
@@ -661,13 +676,86 @@
             });
             updateWordList();
             updateStats();
+            clearSelectionVisual();
+            saveGameState();
         }
         
         function resetGame() {
             foundWords.clear();
+            showFoundWords = true;
+            updateToggleButton();
             generateGrid();
             initializeGrid();
             initializeWordList();
+        }
+        
+        function toggleFoundWords() {
+            showFoundWords = !showFoundWords;
+            updateToggleButton();
+            
+            if (showFoundWords) {
+                highlightFoundWords();
+            } else {
+                // Remover solo los colores de palabras encontradas, mantener la clase base
+                document.querySelectorAll('.cell').forEach(cell => {
+                    // Remover todas las clases de dirección pero mantener 'cell'
+                    directions.forEach(([,,className]) => {
+                        cell.classList.remove(className);
+                    });
+                });
+            }
+            saveGameState();
+        }
+        
+        function updateToggleButton() {
+            const btn = document.getElementById('toggle-found-btn');
+            if (showFoundWords) {
+                btn.innerHTML = '🙈 Ocultar Encontradas';
+            } else {
+                btn.innerHTML = '👁️ Mostrar Encontradas';
+            }
+        }
+        
+        // Funciones de guardado local
+        function saveGameState() {
+            if (!gameId) return;
+            
+            const gameState = {
+                gameId: gameId,
+                grid: grid,
+                wordPositions: Array.from(wordPositions.entries()),
+                foundWords: Array.from(foundWords),
+                showFoundWords: showFoundWords,
+                names: NOMBRES
+            };
+            
+            localStorage.setItem('wordSearchGame', JSON.stringify(gameState));
+        }
+        
+        function loadGameState() {
+            const saved = localStorage.getItem('wordSearchGame');
+            if (!saved) return false;
+            
+            try {
+                const gameState = JSON.parse(saved);
+                
+                // Verificar que los nombres coincidan
+                if (gameState.names.nombre1 !== NOMBRES.nombre1 || 
+                    gameState.names.nombre2 !== NOMBRES.nombre2) {
+                    return false;
+                }
+                
+                gameId = gameState.gameId;
+                grid = gameState.grid;
+                wordPositions = new Map(gameState.wordPositions);
+                foundWords = new Set(gameState.foundWords);
+                showFoundWords = gameState.showFoundWords !== undefined ? gameState.showFoundWords : true;
+                
+                return true;
+            } catch (e) {
+                console.error('Error loading game state:', e);
+                return false;
+            }
         }
         
         // Event listeners
@@ -676,9 +764,24 @@
         
         // Inicializar juego
         document.addEventListener('DOMContentLoaded', function() {
-            generateGrid();
-            initializeGrid();
-            initializeWordList();
+            // Actualizar nombres en el título
+            const titleElement = document.querySelector('h2');
+            titleElement.textContent = `Aniversario de ${NOMBRES.nombre1} y ${NOMBRES.nombre2}`;
+            
+            // Intentar cargar juego guardado
+            if (loadGameState()) {
+                initializeGrid();
+                initializeWordList();
+                updateToggleButton();
+                if (showFoundWords) {
+                    highlightFoundWords();
+                }
+            } else {
+                generateGrid();
+                initializeGrid();
+                initializeWordList();
+                updateToggleButton();
+            }
         });
     </script>
 </body>
